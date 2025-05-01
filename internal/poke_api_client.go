@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-const API_BASE_URL = "https://pokeapi.co/api/v2/"
+const API_BASE_URL = "https://pokeapi.co/api/v2"
 
 type LocationAreaBatch struct {
 	Next     string `json:"next"`
@@ -25,6 +25,7 @@ func GetLocationAreaNames(pageUrl string) (LocationAreaBatch, error) {
 		endpoint := "location-area"
 		url = fmt.Sprintf("%s/%s", API_BASE_URL, endpoint)
 	}
+	fmt.Println("Sending request:", url)
 	res, err := http.Get(url)
 	if err != nil {
 		return LocationAreaBatch{}, err

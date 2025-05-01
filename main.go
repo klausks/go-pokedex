@@ -22,6 +22,7 @@ type commandContext struct {
 }
 
 var availableCommands map[string]cliCommand
+var mapContext = commandContext{}
 
 func initAvailableCommands() {
 	availableCommands = map[string]cliCommand{
@@ -33,9 +34,15 @@ func initAvailableCommands() {
 		},
 		"map": {
 			name:        "map",
-			description: "Shows the location areas",
-			context:     &commandContext{},
+			description: "Shows the next page of location areas",
+			context:     &mapContext,
 			callback:    commandMap,
+		},
+		"mapb": {
+			name:        "mapb",
+			description: "Shows the previous page of location areas",
+			context:     &mapContext,
+			callback:    commandMapBack,
 		},
 	}
 
@@ -83,19 +90,41 @@ func commandMap(context *commandContext) error {
 	if err != nil {
 		return err
 	}
-
+	updateContext(context, resp.Previous, resp.Next)
 	locationAreaNames := getLocationAreaNames(resp)
 	for _, areaName := range locationAreaNames {
 		fmt.Println(areaName)
 	}
-
 	return nil
+}
+
+func commandMapBack(context *commandContext) error {
+	if context.previous == "" {
+		fmt.Println("you're on the first page")
+		return nil
+	}
+	resp, err := internal.GetLocationAreaNames(context.previous)
+	if err != nil {
+		return err
+	}
+	updateContext(context, resp.Previous, resp.Next)
+	locationAreaNames := getLocationAreaNames(resp)
+	for _, areaName := range locationAreaNames {
+		fmt.Println(areaName)
+	}
+	return nil
+}
+
+func updateContext(context *commandContext, previous, next string) {
+	context.next = next
+	fmt.Println("next:", next)
+	context.previous = previous
+	fmt.Println("previous:", previous)
 }
 
 func getLocationAreaNames(resp internal.LocationAreaBatch) []string {
 	var locationAreaNames = make([]string, len(resp.Results))
 	for i, locationArea := range resp.Results {
-		// locationAreaNames = append(locationAreaNames, locationArea.Name)
 		locationAreaNames[i] = locationArea.Name
 	}
 	return locationAreaNames
