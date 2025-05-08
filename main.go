@@ -16,13 +16,15 @@ func initAvailableCommands() map[string]cli.CliCommand {
 	mapCommand := cli.NewMapCommand(mapApiRequestContext, pokeApiClient)
 	mapbCommand := cli.NewMapbCommand(mapApiRequestContext, pokeApiClient)
 	exitCommand := cli.NewExitCommand()
-	helpCommand := cli.NewHelpCommand([]cli.CliCommand{mapCommand, mapbCommand, exitCommand})
+	exploreCommand := cli.NewExploreCommand(pokeApiClient)
+	helpCommand := cli.NewHelpCommand([]cli.CliCommand{mapCommand, mapbCommand, exitCommand, exploreCommand})
 
 	return map[string]cli.CliCommand{
-		mapCommand.Name():  mapCommand,
-		mapbCommand.Name(): mapbCommand,
-		exitCommand.Name(): exitCommand,
-		helpCommand.Name(): helpCommand,
+		mapCommand.Name():     mapCommand,
+		mapbCommand.Name():    mapbCommand,
+		exitCommand.Name():    exitCommand,
+		exploreCommand.Name(): exploreCommand,
+		helpCommand.Name():    helpCommand,
 	}
 }
 
@@ -32,10 +34,15 @@ func main() {
 	for {
 		fmt.Print("Pokedex > ")
 		inputScanner.Scan()
-		commandStr := cleanInput(inputScanner.Text())[0]
+		commandLine := cleanInput(inputScanner.Text())
+		commandStr := commandLine[0]
+		var args []string
+		if len(commandLine) > 1 {
+			args = commandLine[1:]
+		}
 
 		if command, exists := availableCommands[commandStr]; exists {
-			err := command.Execute()
+			err := command.Execute(args)
 			if err != nil {
 				fmt.Println(err)
 			}

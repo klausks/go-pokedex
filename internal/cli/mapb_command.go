@@ -23,7 +23,7 @@ func (c mapbCommand) Description() string {
 	return "Shows the previous page of location areas"
 }
 
-func (c mapbCommand) Execute() error {
+func (c mapbCommand) Execute(args []string) error {
 	locationAreaNames, previousPageUrl, nextPageUrl, err := c.pokeApiClient.GetLocationAreaNames(c.context.previous)
 	if err != nil {
 		return err

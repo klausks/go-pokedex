@@ -23,7 +23,7 @@ func (c mapCommand) Description() string {
 	return "Shows the next page of location areas"
 }
 
-func (c mapCommand) Execute() error {
+func (c mapCommand) Execute(args []string) error {
 	locationAreaNames, previousPageUrl, nextPageUrl, err := c.pokeApiClient.GetLocationAreaNames(c.context.next)
 	if err != nil {
 		return err

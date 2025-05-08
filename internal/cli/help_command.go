@@ -24,8 +24,8 @@ func (c helpCommand) Description() string {
 	return "Displays help menu with information about each command"
 }
 
-func (c helpCommand) Execute() error {
-	fmt.Println("Welcome to the Pokedex!\nUsage:\n")
+func (c helpCommand) Execute(args []string) error {
+	fmt.Print("Welcome to the Pokedex!\nUsage:\n\n")
 	fmt.Println(c.getAvailableCommandsHelp())
 	return nil
 }

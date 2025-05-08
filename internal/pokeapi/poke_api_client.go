@@ -23,13 +23,22 @@ func NewPokeApiClient() *PokeApiClient {
 	return &PokeApiClient{cache: cache, httpClient: client}
 }
 
-type LocationAreaResponse struct {
+type LocationAreasResponse struct {
 	Next     string `json:"next"`
 	Previous string `json:"previous"`
 	Results  []struct {
 		Name string `json:"name"`
 		URL  string `json:"url"`
 	} `json:"results"`
+}
+
+type LocationAreaPokemonEncounters struct {
+	PokemonEncounters []struct {
+		Pokemon struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"pokemon"`
+	} `json:"pokemon_encounters"`
 }
 
 func (client *PokeApiClient) GetLocationAreaNames(pageUrl string) (names []string, previousPageUrl, nextPageUrl string, err error) {
@@ -44,7 +53,19 @@ func (client *PokeApiClient) GetLocationAreaNames(pageUrl string) (names []strin
 	return locationAreaNames, locationAreas.Previous, locationAreas.Next, nil
 }
 
-func (client *PokeApiClient) getLocationAreas(pageUrl string) (LocationAreaResponse, error) {
+func (client *PokeApiClient) GetLocationAreaPokemonEncounters(locationAreaName string) (pokemonNames []string, err error) {
+	locationAreaEncounters, err := client.getLocationAreaEncounters(locationAreaName)
+	if err != nil {
+		return nil, err
+	}
+	var encounteredPokemonNames = make([]string, len(locationAreaEncounters.PokemonEncounters))
+	for i, pokemonEncounter := range locationAreaEncounters.PokemonEncounters {
+		encounteredPokemonNames[i] = pokemonEncounter.Pokemon.Name
+	}
+	return encounteredPokemonNames, nil
+}
+
+func (client *PokeApiClient) getLocationAreas(pageUrl string) (LocationAreasResponse, error) {
 	var url string
 	if pageUrl != "" {
 		url = pageUrl
@@ -53,26 +74,54 @@ func (client *PokeApiClient) getLocationAreas(pageUrl string) (LocationAreaRespo
 		url = fmt.Sprintf("%s/%s", API_BASE_URL, endpoint)
 	}
 	if cached, exists := client.cache.Get(url); exists {
-		var cachedLocationAreaResponsePage LocationAreaResponse
+		var cachedLocationAreaResponsePage LocationAreasResponse
 		if err := json.Unmarshal(cached, &cachedLocationAreaResponsePage); err != nil {
-			return LocationAreaResponse{}, err
+			return LocationAreasResponse{}, err
 		}
 		return cachedLocationAreaResponsePage, nil
 	}
 
-	httpResBody, err := getLocationAreasFromApi(url)
+	httpResBody, err := callGet(url)
 	if err != nil {
-		return LocationAreaResponse{}, nil
+		return LocationAreasResponse{}, nil
 	}
 
 	client.cache.Add(url, httpResBody)
 
-	var locationAreas LocationAreaResponse
+	var locationAreas LocationAreasResponse
 	json.Unmarshal(httpResBody, &locationAreas)
 	return locationAreas, nil
 }
 
-func getLocationAreasFromApi(url string) ([]byte, error) {
+func (client *PokeApiClient) getLocationAreaEncounters(locationAreaName string) (LocationAreaPokemonEncounters, error) {
+	var url string
+	endpoint := "location-area"
+	queryString := "?offset=0&limit=20"
+	url = fmt.Sprintf("%s/%s/%s%s", API_BASE_URL, endpoint, locationAreaName, queryString)
+
+	if cached, exists := client.cache.Get(url); exists {
+		var cachedEncounters LocationAreaPokemonEncounters
+		if err := json.Unmarshal(cached, &cachedEncounters); err != nil {
+			return LocationAreaPokemonEncounters{}, err
+		}
+		return cachedEncounters, nil
+	}
+
+	httpResBody, err := callGet(url)
+	if err != nil {
+		return LocationAreaPokemonEncounters{}, err
+	}
+
+	client.cache.Add(url, httpResBody)
+
+	var locationAreaPokemonEncounters LocationAreaPokemonEncounters
+	if err := json.Unmarshal(httpResBody, &locationAreaPokemonEncounters); err != nil {
+		return LocationAreaPokemonEncounters{}, err
+	}
+	return locationAreaPokemonEncounters, nil
+}
+
+func callGet(url string) ([]byte, error) {
 	fmt.Println("Sending request:", url)
 	httpRes, err := http.Get(url)
 	if err != nil {
@@ -84,5 +133,10 @@ func getLocationAreasFromApi(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if httpRes.StatusCode > 299 {
+		return nil, fmt.Errorf("received non-success responde code %d, response body: %s", httpRes.StatusCode, httpResBody)
+	}
+
 	return httpResBody, nil
 }
