@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/klausks/go-pokedex/internal/pokecache"
+	"github.com/klausks/go-pokedex/model"
 )
 
 const API_BASE_URL = "https://pokeapi.co/api/v2"
@@ -18,7 +19,7 @@ type PokeApiClient struct {
 }
 
 func NewPokeApiClient() *PokeApiClient {
-	cache := pokecache.NewCache(time.Minute)
+	cache := pokecache.NewCache(time.Minute * 5)
 	client := http.DefaultClient
 	return &PokeApiClient{cache: cache, httpClient: client}
 }
@@ -63,6 +64,32 @@ func (client *PokeApiClient) GetLocationAreaPokemonEncounters(locationAreaName s
 		encounteredPokemonNames[i] = pokemonEncounter.Pokemon.Name
 	}
 	return encounteredPokemonNames, nil
+}
+
+func (client *PokeApiClient) GetPokemonInfo(pokemonName string) (model.Pokemon, error) {
+	endpoint := "pokemon"
+	url := fmt.Sprintf("%s/%s/%s", API_BASE_URL, endpoint, pokemonName)
+
+	if cached, exists := client.cache.Get(url); exists {
+		var cachedPokemonInfo model.Pokemon
+		if err := json.Unmarshal(cached, &cachedPokemonInfo); err != nil {
+			return model.Pokemon{}, err
+		}
+		return cachedPokemonInfo, nil
+	}
+
+	httpResBody, err := callGet(url)
+	if err != nil {
+		return model.Pokemon{}, err
+	}
+
+	client.cache.Add(url, httpResBody)
+
+	var pokemonInfoResponse model.Pokemon
+	if err := json.Unmarshal(httpResBody, &pokemonInfoResponse); err != nil {
+		return model.Pokemon{}, err
+	}
+	return pokemonInfoResponse, nil
 }
 
 func (client *PokeApiClient) getLocationAreas(pageUrl string) (LocationAreasResponse, error) {

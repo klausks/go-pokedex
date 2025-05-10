@@ -17,7 +17,8 @@ func initAvailableCommands() map[string]cli.CliCommand {
 	mapbCommand := cli.NewMapbCommand(mapApiRequestContext, pokeApiClient)
 	exitCommand := cli.NewExitCommand()
 	exploreCommand := cli.NewExploreCommand(pokeApiClient)
-	helpCommand := cli.NewHelpCommand([]cli.CliCommand{mapCommand, mapbCommand, exitCommand, exploreCommand})
+	catchCommand := cli.NewCatchCommand(pokeApiClient)
+	helpCommand := cli.NewHelpCommand([]cli.CliCommand{mapCommand, mapbCommand, exitCommand, exploreCommand, catchCommand})
 
 	return map[string]cli.CliCommand{
 		mapCommand.Name():     mapCommand,
@@ -25,11 +26,13 @@ func initAvailableCommands() map[string]cli.CliCommand {
 		exitCommand.Name():    exitCommand,
 		exploreCommand.Name(): exploreCommand,
 		helpCommand.Name():    helpCommand,
+		catchCommand.Name():   catchCommand,
 	}
 }
 
 func main() {
 	availableCommands := initAvailableCommands()
+
 	inputScanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Pokedex > ")

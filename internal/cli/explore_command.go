@@ -24,7 +24,7 @@ func (c exploreCommand) Description() string {
 
 func (c exploreCommand) Execute(args []string) error {
 	if args == nil || len(args) != 1 {
-		return fmt.Errorf("Error. Correct usage: 'explore <area_name>'")
+		return fmt.Errorf("correct usage: 'explore <area_name>'")
 	}
 	locationAreaName := args[0]
 	pokemonNames, err := c.pokeApiClient.GetLocationAreaPokemonEncounters(locationAreaName)
