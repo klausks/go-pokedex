@@ -22,7 +22,8 @@ func initAvailableCommands() map[string]cli.CliCommand {
 	pokemonsCaught := make(map[string]model.Pokemon)
 	catchCommand := cli.NewCatchCommand(pokeApiClient, pokemonsCaught)
 	inspectCommand := cli.NewinspectCommand(pokemonsCaught)
-	helpCommand := cli.NewHelpCommand([]cli.CliCommand{mapCommand, mapbCommand, exitCommand, exploreCommand, catchCommand, inspectCommand})
+	pokedexCommand := cli.NewpokedexCommand(pokemonsCaught)
+	helpCommand := cli.NewHelpCommand([]cli.CliCommand{mapCommand, mapbCommand, exitCommand, exploreCommand, catchCommand, inspectCommand, pokedexCommand})
 
 	return map[string]cli.CliCommand{
 		mapCommand.Name():     mapCommand,
@@ -32,6 +33,7 @@ func initAvailableCommands() map[string]cli.CliCommand {
 		helpCommand.Name():    helpCommand,
 		catchCommand.Name():   catchCommand,
 		inspectCommand.Name(): inspectCommand,
+		pokedexCommand.Name(): pokedexCommand,
 	}
 }
 
