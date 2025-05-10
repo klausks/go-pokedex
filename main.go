@@ -8,6 +8,7 @@ import (
 
 	"github.com/klausks/go-pokedex/internal/cli"
 	"github.com/klausks/go-pokedex/internal/pokeapi"
+	"github.com/klausks/go-pokedex/model"
 )
 
 func initAvailableCommands() map[string]cli.CliCommand {
@@ -17,8 +18,11 @@ func initAvailableCommands() map[string]cli.CliCommand {
 	mapbCommand := cli.NewMapbCommand(mapApiRequestContext, pokeApiClient)
 	exitCommand := cli.NewExitCommand()
 	exploreCommand := cli.NewExploreCommand(pokeApiClient)
-	catchCommand := cli.NewCatchCommand(pokeApiClient)
-	helpCommand := cli.NewHelpCommand([]cli.CliCommand{mapCommand, mapbCommand, exitCommand, exploreCommand, catchCommand})
+
+	pokemonsCaught := make(map[string]model.Pokemon)
+	catchCommand := cli.NewCatchCommand(pokeApiClient, pokemonsCaught)
+	inspectCommand := cli.NewinspectCommand(pokemonsCaught)
+	helpCommand := cli.NewHelpCommand([]cli.CliCommand{mapCommand, mapbCommand, exitCommand, exploreCommand, catchCommand, inspectCommand})
 
 	return map[string]cli.CliCommand{
 		mapCommand.Name():     mapCommand,
@@ -27,6 +31,7 @@ func initAvailableCommands() map[string]cli.CliCommand {
 		exploreCommand.Name(): exploreCommand,
 		helpCommand.Name():    helpCommand,
 		catchCommand.Name():   catchCommand,
+		inspectCommand.Name(): inspectCommand,
 	}
 }
 

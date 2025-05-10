@@ -13,8 +13,8 @@ type catchCommand struct {
 	pokemonsCaught map[string]model.Pokemon
 }
 
-func NewCatchCommand(client *pokeapi.PokeApiClient) catchCommand {
-	return catchCommand{pokeApiClient: client, pokemonsCaught: make(map[string]model.Pokemon)}
+func NewCatchCommand(client *pokeapi.PokeApiClient, pokemonsCaught map[string]model.Pokemon) catchCommand {
+	return catchCommand{pokeApiClient: client, pokemonsCaught: pokemonsCaught}
 }
 
 func (c catchCommand) Name() string {
